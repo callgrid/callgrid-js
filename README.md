@@ -8,9 +8,9 @@ CallGrid can be loaded directly from our CDN without any build process or packag
 
 - [Quick Start](#quick-start)
 - [Installation Methods](#installation-methods)
-  - [Method 1: Auto-initialization with Data Attributes](#method-1-auto-initialization-with-data-attributes)
+  - [Method 1: Dynamic Script Loading (Recommended)](#method-1-dynamic-script-loading-recommended)
   - [Method 2: Manual Initialization](#method-2-manual-initialization)
-  - [Method 3: Dynamic Script Loading](#method-3-dynamic-script-loading)
+  - [Method 3: Auto-initialization with Data Attributes](#method-3-auto-initialization-with-data-attributes)
 - [Configuration Options](#configuration-options)
 - [DNI Options](#dni-options)
 - [API Methods](#api-methods)
@@ -20,66 +20,47 @@ CallGrid can be loaded directly from our CDN without any build process or packag
 
 ## Quick Start
 
-The simplest way to add CallGrid to your website:
+For optimal phone number pool usage, we recommend loading CallGrid dynamically when the user needs to see phone numbers:
 
 ```html
-<script
-  src="https://cdn.callgrid.com/callgrid.js"
-  data-organization-id="YOUR_ORG_ID"
-  data-campaign-source-id="YOUR_CAMPAIGN_ID"
-></script>
-```
+<button onclick="showPhoneNumber()">Show Contact Info</button>
 
-This will automatically initialize CallGrid and start replacing phone numbers on your page.
-
-## Installation Methods
-
-### Method 1: Auto-initialization with Data Attributes
-
-The easiest way to use CallGrid is with data attributes. The script will automatically initialize when it loads.
-
-```html
-<script
-  src="https://cdn.callgrid.com/callgrid.js"
-  data-organization-id="YOUR_ORG_ID"
-  data-campaign-source-id="YOUR_CAMPAIGN_ID"
-  data-idle-timeout="300000"
-  data-target-phone-number="555-123-4567"
-  data-auto-enable-dni="true"
-></script>
-```
-
-**Available Data Attributes:**
-
-| Attribute                  | Required | Description                                                         | Default            |
-| -------------------------- | -------- | ------------------------------------------------------------------- | ------------------ |
-| `data-organization-id`     | Yes      | Your CallGrid organization ID                                       | -                  |
-| `data-campaign-source-id`  | Yes      | Your campaign source ID                                             | -                  |
-| `data-idle-timeout`        | No       | Time in milliseconds before releasing number due to inactivity      | 300000 (5 minutes) |
-| `data-target-phone-number` | No       | Specific phone number to replace (if not set, replaces all numbers) | -                  |
-| `data-auto-enable-dni`     | No       | Automatically enable Dynamic Number Insertion                       | true               |
-
-### Method 2: Manual Initialization
-
-Load the script without data attributes and initialize manually:
-
-```html
-<script src="https://cdn.callgrid.com/callgrid.js"></script>
 <script>
-  // Initialize CallGrid manually
-  const callgrid = new CallGrid({
-    organizationId: 'YOUR_ORG_ID',
-    campaignSourceId: 'YOUR_CAMPAIGN_ID',
-    idleTimeout: 300000, // 5 minutes
-    targetPhoneNumber: '555-123-4567', // Optional: only replace this number
-    autoEnableDNI: true, // Automatically enable number replacement
-  });
+function showPhoneNumber() {
+  if (!window.CallGrid) {
+    const script = document.createElement('script');
+    script.src = 'https://cdn.callgrid.com/callgrid.js';
+    script.onload = () => {
+      new CallGrid({
+        organizationId: 'YOUR_ORG_ID',
+        campaignSourceId: 'YOUR_CAMPAIGN_ID',
+        autoEnableDNI: true
+      });
+    };
+    document.head.appendChild(script);
+  }
+}
 </script>
 ```
 
-### Method 3: Dynamic Script Loading
+This approach conserves your phone number pool by only requesting numbers when actually needed. For simpler setup (but less efficient), see [Method 3: Auto-initialization](#method-3-auto-initialization-with-data-attributes).
 
-Load CallGrid only when needed (e.g., after user interaction):
+## Installation Methods
+
+We recommend these methods in order of preference, based on efficiency and phone number pool optimization:
+
+1. **Dynamic Script Loading** - Best for most use cases. Load CallGrid only when needed to conserve phone numbers.
+2. **Manual Initialization** - Good when phone numbers must be shown immediately on page load.
+3. **Auto-initialization with Data Attributes** - Simplest but least flexible option.
+
+### Method 1: Dynamic Script Loading (Recommended)
+
+**✅ Most Preferred Method** - This approach optimizes your phone number pool usage by only requesting a tracking number when actually needed.
+
+Load CallGrid only when the user is ready to see the phone number (e.g., after scrolling, clicking a button, or spending time on page). This method:
+- **Reduces the number of phone numbers needed in your pool**
+- **Improves page load performance**
+- **Gives you full control over when tracking begins**
 
 ```html
 <button onclick="loadCallGrid()">Load CallGrid</button>
@@ -95,6 +76,11 @@ Load CallGrid only when needed (e.g., after user interaction):
     script.dataset.campaignSourceId = 'YOUR_CAMPAIGN_ID';
     script.dataset.idleTimeout = '300000';
     script.dataset.autoEnableDni = 'true';
+    script.dataset.tags = JSON.stringify({
+      age: '35-44',
+      gender: 'male',
+      zipcode: '10001',
+    });
 
     // Append to document
     document.head.appendChild(script);
@@ -107,7 +93,7 @@ Load CallGrid only when needed (e.g., after user interaction):
 </script>
 ```
 
-Or load and initialize manually after an event:
+#### Example 2: Load and Initialize Manually
 
 ```html
 <button onclick="loadAndInitialize()">Start Tracking</button>
@@ -124,6 +110,11 @@ Or load and initialize manually after an event:
         campaignSourceId: 'YOUR_CAMPAIGN_ID',
         idleTimeout: 300000,
         autoEnableDNI: true,
+        tags: {
+          age: '35-44',
+          gender: 'male',
+          zipcode: '10001',
+        },
       });
     };
 
@@ -131,6 +122,67 @@ Or load and initialize manually after an event:
   }
 </script>
 ```
+
+### Method 2: Manual Initialization
+
+**Good for immediate display** - Use this method when phone numbers must be visible immediately on page load.
+
+This method is preferred over data attributes because it:
+- **Provides more control over configuration**
+- **Allows dynamic configuration based on conditions**
+- **Makes debugging easier**
+
+Load the script and initialize manually:
+
+```html
+<script src="https://cdn.callgrid.com/callgrid.js"></script>
+<script>
+  // Initialize CallGrid manually when page loads
+  const callgrid = new CallGrid({
+    organizationId: 'YOUR_ORG_ID',
+    campaignSourceId: 'YOUR_CAMPAIGN_ID',
+    idleTimeout: 300000, // 5 minutes
+    targetPhoneNumber: '555-123-4567', // Optional: only replace this number
+    autoEnableDNI: true, // Automatically enable number replacement
+    tags: {
+      age: '35-44',
+      gender: 'male',
+      zipcode: '10001',
+    },
+  });
+</script>
+```
+
+### Method 3: Auto-initialization with Data Attributes
+
+**Simplest but least flexible** - Use this only for basic implementations where you need minimal configuration.
+
+⚠️ **Note:** This method immediately requests a phone number on page load, which may consume more numbers from your pool than necessary.
+
+The script automatically initializes when it loads:
+
+```html
+<script
+  src="https://cdn.callgrid.com/callgrid.js"
+  data-organization-id="YOUR_ORG_ID"
+  data-campaign-source-id="YOUR_CAMPAIGN_ID"
+  data-idle-timeout="300000"
+  data-target-phone-number="555-123-4567"
+  data-auto-enable-dni="true"
+  data-tags='{"age":"35-44","gender":"male","zipcode":"10001"}'
+></script>
+```
+
+**Available Data Attributes:**
+
+| Attribute                  | Required | Description                                                         | Default            |
+| -------------------------- | -------- | ------------------------------------------------------------------- | ------------------ |
+| `data-organization-id`     | Yes      | Your CallGrid organization ID                                       | -                  |
+| `data-campaign-source-id`  | Yes      | Your campaign source ID                                             | -                  |
+| `data-idle-timeout`        | No       | Time in milliseconds before releasing number due to inactivity      | 300000 (5 minutes) |
+| `data-target-phone-number` | No       | Specific phone number to replace (if not set, replaces all numbers) | -                  |
+| `data-auto-enable-dni`     | No       | Automatically enable Dynamic Number Insertion                       | true               |
+| `data-tags`                | No       | Custom tags to include in tracking (JSON format)                    | -                  |
 
 ## Configuration Options
 
@@ -142,7 +194,12 @@ When initializing CallGrid manually, you can pass the following configuration op
   campaignSourceId: 'YOUR_CAMPAIGN_ID', // Required: Your campaign source ID
   idleTimeout: 300000,                  // Optional: Milliseconds before releasing number (default: 300000)
   targetPhoneNumber: '555-123-4567',    // Optional: Only replace this specific number
-  autoEnableDNI: true                   // Optional: Auto-enable number replacement (default: true)
+  autoEnableDNI: true,                  // Optional: Auto-enable number replacement (default: true)
+  tags: {                              // Optional: Custom tags for tracking
+    age: '25-34',
+    gender: 'male',
+    zipcode: '10001'
+  }
 }
 ```
 
@@ -153,6 +210,69 @@ When initializing CallGrid manually, you can pass the following configuration op
 - **idleTimeout**: Time in milliseconds of user inactivity before releasing the assigned tracking number. Set to 0 to disable idle timeout.
 - **targetPhoneNumber**: When specified, only this phone number will be replaced on your site. Supports various formats (e.g., "555-123-4567", "(555) 123-4567", "+15551234567")
 - **autoEnableDNI**: When true, automatically starts replacing phone numbers after initialization
+- **tags**: Optional custom tags to include with all tracking events. See [Custom Tags](#custom-tags) section for details.
+
+### Custom Tags
+
+CallGrid automatically captures and tracks all URL parameters (UTM parameters, campaign IDs, etc.) from your visitor's session. **You do not need to manually pass URL parameters as tags.** You only need to add the parameter names to the Tags page in your CallGrid account.
+
+Custom tags are for additional business-specific data that isn't already in the URL, such as:
+
+- Demographic information (e.g., age, gender, location)
+- User segments or types (e.g., "enterprise", "small-business")
+- Internal categorizations (e.g., "high-value", "returning-customer")
+- A/B test variants
+- Any custom metadata specific to your business needs
+
+**Important:** CallGrid automatically tracks:
+
+- All UTM parameters (utm_source, utm_medium, utm_campaign, etc.)
+- Facebook parameters (fbclid, fbc, fbp)
+- Google parameters (gclid)
+- Other common tracking parameters
+- Page URL, referrer, and visitor source
+
+#### Using Custom Tags
+
+Tags can be added in three ways:
+
+1. **Via Constructor (Manual Initialization)**:
+
+```javascript
+const callgrid = new CallGrid({
+  organizationId: 'YOUR_ORG_ID',
+  campaignSourceId: 'YOUR_CAMPAIGN_ID',
+  tags: {
+    age: '25-34',
+    gender: 'female',
+    zipcode: '90210',
+  },
+});
+```
+
+2. **Via Data Attribute (Auto-initialization)**:
+
+```html
+<script
+  src="https://cdn.callgrid.com/callgrid.js"
+  data-organization-id="YOUR_ORG_ID"
+  data-campaign-source-id="YOUR_CAMPAIGN_ID"
+  data-tags='{"age":"25-34","gender":"female","zipcode":"90210"}'
+></script>
+```
+
+3. **Programmatically via Dataset**:
+
+```javascript
+const script = document.querySelector('script[src*="callgrid"]');
+script.dataset.tags = JSON.stringify({
+  age: '25-34',
+  gender: 'female',
+  zipcode: '90210',
+});
+```
+
+**Note:** Tags must be valid JSON when using data attributes. Use single quotes around the attribute value to allow double quotes in the JSON.
 
 ## DNI Options
 
@@ -467,4 +587,3 @@ export default {
 ## Support
 
 For additional support or questions, please contact CallGrid support.
-
