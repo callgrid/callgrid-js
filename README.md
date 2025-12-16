@@ -234,7 +234,7 @@ Custom tags are for additional business-specific data that isn't already in the 
 
 #### Using Custom Tags
 
-Tags can be added in three ways:
+Tags can be added in four ways:
 
 1. **Via Constructor (Manual Initialization)**:
 
@@ -271,6 +271,28 @@ script.dataset.tags = JSON.stringify({
   zipcode: '90210',
 });
 ```
+
+4. **After Initialization (addTags)**:
+
+```javascript
+// Initialize without tags (or with initial tags)
+const callgrid = new CallGrid({
+  organizationId: 'YOUR_ORG_ID',
+  campaignSourceId: 'YOUR_CAMPAIGN_ID',
+});
+
+// Later, after collecting user information
+callgrid.addTags({
+  firstName: 'John',
+  leadSource: 'contact-form',
+});
+
+// Can call multiple times - new tags merge with existing
+callgrid.addTags({ lastName: 'Doe' });
+// Now has: firstName, leadSource, lastName
+```
+
+**Note:** When `addTags()` is called after a tracking number has been assigned, it automatically fires an update event to associate the new tags with the existing impression. This is useful when you need to collect user information (e.g., from a form) after the page has loaded.
 
 **Note:** Tags must be valid JSON when using data attributes. Use single quotes around the attribute value to allow double quotes in the JSON.
 
@@ -316,6 +338,12 @@ callgrid.disableDNI();
 
 // Get the currently assigned tracking number
 const assignedNumber = callgrid.getAssignedNumber();
+
+// Add custom tags after initialization
+callgrid.addTags({
+  firstName: 'John',
+  leadSource: 'contact-form'
+});
 
 // Clear stored data
 callgrid.clearStorage();
